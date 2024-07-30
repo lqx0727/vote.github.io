@@ -1,0 +1,528 @@
+<html><head><base href="https://particivote.org/"><title>中秋节节目投票</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+    body {
+        font-family: 'Noto Sans SC', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #1a237e;
+        color: #f3e5ab;
+        line-height: 1.6;
+        background-image: url('https://particivote.org/images/moon-bg.svg');
+        background-size: cover;
+        background-attachment: fixed;
+    }
+    header {
+        background: linear-gradient(135deg, #4a148c, #7c4dff);
+        color: #f3e5ab;
+        text-align: center;
+        padding: 2em;
+        font-family: 'Ma Shan Zheng', cursive;
+        position: relative;
+    }
+    main {
+        max-width: 1200px;
+        margin: 2em auto;
+        padding: 2em;
+        background-color: rgba(26, 35, 126, 0.8);
+        box-shadow: 0 0 20px rgba(243, 229, 171, 0.3);
+        border-radius: 8px;
+    }
+    .participants-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2em;
+    }
+    .participant-card {
+        background-color: #303f9f;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+    .participant-card:hover {
+        transform: translateY(-5px);
+    }
+    .participant-photo {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    .participant-info {
+        padding: 1em;
+    }
+    .participant-name {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 0.5em;
+        color: #f3e5ab;
+    }
+    .vote-button {
+        background-color: #ff9800;
+        border: none;
+        color: #1a237e;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: block;
+        width: 100%;
+        font-size: 16px;
+        margin-top: 1em;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+        font-weight: bold;
+    }
+    .vote-button:hover {
+        background-color: #ffc107;
+    }
+    .vote-button:disabled {
+        background-color: #9e9e9e;
+        cursor: not-allowed;
+    }
+    .vote-count {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #f3e5ab;
+        margin-top: 0.5em;
+    }
+    .total-votes {
+        text-align: center;
+        font-size: 1.5em;
+        margin-bottom: 1em;
+        color: #f3e5ab;
+    }
+    .moon-cake {
+        width: 50px;
+        height: 50px;
+        background-color: #f3e5ab;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 10px;
+        position: relative;
+        box-shadow: inset 0 0 10px #d4af37;
+    }
+    .moon-cake::before {
+        content: "月";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #8b4513;
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .login-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background-color: #f3e5ab;
+        color: #1a237e;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        z-index: 1001; /* Ensure it's above the site-closed overlay */
+    }
+    .login-modal {
+        display: none;
+        position: fixed;
+        z-index: 1002; /* Ensure it's above everything else */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #303f9f;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 300px;
+        color: #f3e5ab;
+        border-radius: 8px;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+        color: #f3e5ab;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .edit-mode {
+        border: 2px dashed #ff9800;
+        padding: 10px;
+        margin-top: 10px;
+    }
+    .edit-input {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 5px;
+    }
+    .admin-menu {
+        display: none;
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        background-color: #303f9f;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        z-index: 1001; /* Ensure it's above the site-closed overlay */
+    }
+    .admin-menu button {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #f3e5ab;
+        color: #1a237e;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .admin-menu button:hover {
+        background-color: #ffd54f;
+    }
+    .public-stats {
+        background-color: rgba(48, 63, 159, 0.9);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .site-closed {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(26, 35, 126, 0.9);
+        z-index: 1000;
+        color: #f3e5ab;
+        font-size: 24px;
+        text-align: center;
+        padding-top: 20%;
+    }
+    .user-status {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: 16px;
+        color: #f3e5ab;
+        z-index: 1001; /* Ensure it's above the site-closed overlay */
+    }
+    .photo-upload {
+        display: none;
+    }
+    .photo-upload-label {
+        display: inline-block;
+        padding: 6px 12px;
+        cursor: pointer;
+        background-color: #f3e5ab;
+        color: #1a237e;
+        border-radius: 4px;
+        margin-top: 5px;
+    }
+    #logoutButton {
+        background-color: #ff5722;
+    }
+    #logoutButton:hover {
+        background-color: #ff7043;
+    }
+</style>
+</head>
+<body>
+    <header>
+        <h1>中秋节节目投票</h1>
+        <p>为您最喜爱的节目投票，共度佳节！</p>
+        <div>
+            <span class="moon-cake"></span>
+            <span class="moon-cake"></span>
+            <span class="moon-cake"></span>
+        </div>
+        <div id="userStatus" class="user-status">身份：访问者</div>
+        <button id="loginButton" class="login-button">管理员登录</button>
+    </header>
+    <div id="loginModal" class="login-modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>管理员登录</h2>
+            <input type="password" id="passwordInput" placeholder="请输入密码">
+            <button id="submitPassword">提交</button>
+        </div>
+    </div>
+    <div id="adminMenu" class="admin-menu">
+        <button id="resetVotesButton">一键清零</button>
+        <button id="toggleEditModeButton">切换编辑模式</button>
+        <button id="toggleSiteAccessButton">关闭公众访问</button>
+        <button id="logoutButton">管理员登出</button>
+    </div>
+    <main id="mainContent">
+        <div class="public-stats">
+            <h2>投票统计</h2>
+            <div class="total-votes">总票数: <span id="totalVotes">0</span></div>
+        </div>
+        <div class="participants-grid" id="participantsGrid">
+            <!-- Participant cards will be dynamically inserted here -->
+        </div>
+    </main>
+    <div id="siteClosed" class="site-closed">
+        <h2>网站维护中</h2>
+        <p>对不起，投票系统暂时关闭。请稍后再试。</p>
+    </div>
+
+    <script>
+        const participants = [
+            { id: 1, name: "传统舞蹈表演", photo: "dance.jpg", votes: 0 },
+            { id: 2, name: "古筝独奏", photo: "guzheng.jpg", votes: 0 },
+            { id: 3, name: "诗歌朗诵", photo: "poetry.jpg", votes: 0 },
+            { id: 4, name: "相声小品", photo: "comedy.jpg", votes: 0 },
+            { id: 5, name: "民族歌曲演唱", photo: "song.jpg", votes: 0 },
+            { id: 6, name: "功夫展示", photo: "kungfu.jpg", votes: 0 },
+            { id: 7, name: "戏曲表演", photo: "opera.jpg", votes: 0 },
+            { id: 8, name: "魔术表演", photo: "magic.jpg", votes: 0 },
+            { id: 9, name: "扇子舞", photo: "fan-dance.jpg", votes: 0 },
+            { id: 10, name: "中秋灯谜", photo: "riddles.jpg", votes: 0 }
+        ];
+
+        const participantsGrid = document.getElementById('participantsGrid');
+        const totalVotesElement = document.getElementById('totalVotes');
+        const mainContent = document.getElementById('mainContent');
+        const userStatusElement = document.getElementById('userStatus');
+        let totalVotes = 0;
+        let isEditMode = false;
+        let isSiteClosed = false;
+        let userRole = "访问者";
+
+        function createParticipantCard(participant) {
+            const card = document.createElement('div');
+            card.className = 'participant-card';
+            card.innerHTML = `
+                <img src="https://particivote.org/images/${participant.photo}" alt="${participant.name}" class="participant-photo" width="250" height="200">
+                <div class="participant-info">
+                    <div class="participant-name">${participant.name}</div>
+                    <button class="vote-button" data-id="${participant.id}">投票</button>
+                    <div class="vote-count" id="voteCount-${participant.id}">${participant.votes} 票</div>
+                </div>
+                <div class="edit-mode" style="display: none;">
+                    <input type="text" class="edit-input edit-name" value="${participant.name}">
+                    <input type="text" class="edit-input edit-photo" value="${participant.photo}" disabled>
+                    <input type="number" class="edit-input edit-votes" value="${participant.votes}">
+                    <input type="file" id="photoUpload-${participant.id}" class="photo-upload" accept="image/*">
+                    <label for="photoUpload-${participant.id}" class="photo-upload-label">选择新照片</label>
+                    <button class="save-edit" data-id="${participant.id}">保存</button>
+                </div>
+            `;
+            return card;
+        }
+
+        function renderParticipants() {
+            participantsGrid.innerHTML = '';
+            participants.forEach(participant => {
+                const card = createParticipantCard(participant);
+                participantsGrid.appendChild(card);
+            });
+        }
+
+        renderParticipants();
+
+        participantsGrid.addEventListener('click', (e) => {
+            if (isSiteClosed && userRole !== "管理员") return;
+            if (e.target.classList.contains('vote-button')) {
+                const button = e.target;
+                const participantId = parseInt(button.dataset.id);
+                const participant = participants.find(p => p.id === participantId);
+                
+                if (participant) {
+                    participant.votes++;
+                    totalVotes++;
+                    updateVoteCount(participantId, participant.votes);
+                    updateTotalVotes();
+                    
+                    button.disabled = true;
+                    button.textContent = '已投票';
+                }
+            } else if (e.target.classList.contains('save-edit') && userRole === "管理员") {
+                const participantId = parseInt(e.target.dataset.id);
+                const card = e.target.closest('.participant-card');
+                const nameInput = card.querySelector('.edit-name');
+                const votesInput = card.querySelector('.edit-votes');
+                const photoUpload = card.querySelector('.photo-upload');
+                
+                const participant = participants.find(p => p.id === participantId);
+                if (participant) {
+                    const oldVotes = participant.votes;
+                    participant.name = nameInput.value;
+                    participant.votes = parseInt(votesInput.value);
+                    totalVotes = totalVotes - oldVotes + participant.votes;
+                    updateTotalVotes();
+
+                    if (photoUpload.files.length > 0) {
+                        const file = photoUpload.files[0];
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            participant.photo = e.target.result;
+                            renderParticipants();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        renderParticipants();
+                    }
+                }
+            }
+        });
+
+        function updateVoteCount(participantId, votes) {
+            const voteCountElement = document.getElementById(`voteCount-${participantId}`);
+            voteCountElement.textContent = `${votes} 票`;
+        }
+
+        function updateTotalVotes() {
+            totalVotesElement.textContent = totalVotes;
+        }
+
+        function updateUserStatus() {
+            userStatusElement.textContent = `身份：${userRole}`;
+        }
+
+        // Login functionality
+        const loginButton = document.getElementById('loginButton');
+        const loginModal = document.getElementById('loginModal');
+        const closeButton = document.getElementsByClassName('close')[0];
+        const passwordInput = document.getElementById('passwordInput');
+        const submitPassword = document.getElementById('submitPassword');
+        const adminMenu = document.getElementById('adminMenu');
+        const resetVotesButton = document.getElementById('resetVotesButton');
+        const toggleEditModeButton = document.getElementById('toggleEditModeButton');
+        const toggleSiteAccessButton = document.getElementById('toggleSiteAccessButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const siteClosedOverlay = document.getElementById('siteClosed');
+
+        loginButton.onclick = function() {
+            loginModal.style.display = "block";
+        }
+
+        closeButton.onclick = function() {
+            loginModal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == loginModal) {
+                loginModal.style.display = "none";
+            }
+        }
+
+        submitPassword.onclick = function() {
+            if (passwordInput.value === "3106") {
+                loginModal.style.display = "none";
+                adminMenu.style.display = "block";
+                userRole = "管理员";
+                updateUserStatus();
+                alert("登录成功！现在您可以使用管理员功能。");
+                checkAccess();
+            } else {
+                alert("密码错误，请重试。");
+                userRole = "访问者";
+                updateUserStatus();
+            }
+        }
+
+        resetVotesButton.onclick = function() {
+            if (userRole === "管理员" && confirm("确定要清零所有投票吗？")) {
+                participants.forEach(p => p.votes = 0);
+                totalVotes = 0;
+                updateTotalVotes();
+                renderParticipants();
+            }
+        }
+
+        toggleEditModeButton.onclick = function() {
+            if (userRole === "管理员") {
+                isEditMode = !isEditMode;
+                toggleEditMode();
+            } else {
+                alert("请先登录管理员账户。");
+            }
+        }
+
+        toggleSiteAccessButton.onclick = function() {
+            if (userRole === "管理员") {
+                isSiteClosed = !isSiteClosed;
+                checkAccess();
+                toggleSiteAccessButton.textContent = isSiteClosed ? "开放公众访问" : "关闭公众访问";
+            } else {
+                alert("请先登录管理员账户。");
+            }
+        }
+
+        logoutButton.onclick = function() {
+            if (userRole === "管理员") {
+                userRole = "访问者";
+                adminMenu.style.display = "none";
+                isEditMode = false;
+                toggleEditMode();
+                updateUserStatus();
+                checkAccess();
+                alert("您已成功登出管理员账户。");
+            }
+        }
+
+        function toggleEditMode() {
+            const editModes = document.querySelectorAll('.edit-mode');
+            editModes.forEach(mode => {
+                mode.style.display = isEditMode ? "block" : "none";
+            });
+            toggleEditModeButton.textContent = isEditMode ? "关闭编辑模式" : "开启编辑模式";
+        }
+
+        function checkAccess() {
+            if (isSiteClosed && userRole !== "管理员") {
+                mainContent.style.display = "none";
+                siteClosedOverlay.style.display = "block";
+            } else {
+                mainContent.style.display = "block";
+                siteClosedOverlay.style.display = "none";
+            }
+        }
+
+        // Reset all votes to 0
+        participants.forEach(p => p.votes = 0);
+        totalVotes = 0;
+        updateTotalVotes();
+        renderParticipants();
+
+        // Check access on page load
+        checkAccess();
+        updateUserStatus();
+
+        // Simulate periodic updates (disabled for now)
+        /*
+        setInterval(() => {
+            if (!isSiteClosed || userRole === "管理员") {
+                const randomParticipant = participants[Math.floor(Math.random() * participants.length)];
+                if (Math.random() > 0.7) {
+                    randomParticipant.votes++;
+                    totalVotes++;
+                    updateVoteCount(randomParticipant.id, randomParticipant.votes);
+                    updateTotalVotes();
+                }
+            }
+        }, 2000);
+        */
+    </script>
+</body>
+</html>
